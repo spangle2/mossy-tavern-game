@@ -6,6 +6,16 @@ canvas.height = window.innerHeight;
 
 const gravity = 0.8;
 
+// Load textures
+const playerImg = new Image();
+playerImg.src = 'Mossy Tileset/Mossy - TileSet.png'; // pick a player tile section later
+
+const platformImg = new Image();
+platformImg.src = 'Mossy Tileset/Mossy - MossyHills.png';
+
+const backgroundImg = new Image();
+backgroundImg.src = 'Mossy Tileset/Mossy - BackgroundDecoration.png';
+
 class Player {
     constructor() {
         this.width = 50;
@@ -20,12 +30,10 @@ class Player {
     }
 
     update() {
-        // Apply gravity
         this.velY += gravity;
         this.x += this.velX;
         this.y += this.velY;
 
-        // Collision with floor
         if (this.y + this.height > canvas.height) {
             this.y = canvas.height - this.height;
             this.velY = 0;
@@ -36,8 +44,12 @@ class Player {
     }
 
     draw() {
-        ctx.fillStyle = 'green';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        // Draw a section of the tileset as player
+        ctx.drawImage(
+            playerImg,
+            0, 0, 32, 32,           // crop from tileset
+            this.x, this.y, this.width, this.height
+        );
     }
 }
 
@@ -50,7 +62,9 @@ class Platform {
     }
 
     draw(offsetX) {
-        ctx.fillStyle = 'brown';
+        // Tile the platform texture
+        const pattern = ctx.createPattern(platformImg, 'repeat');
+        ctx.fillStyle = pattern;
         ctx.fillRect(this.x - offsetX, this.y, this.width, this.height);
     }
 }
@@ -59,10 +73,10 @@ const player = new Player();
 const keys = {};
 
 const platforms = [
-    new Platform(300, canvas.height - 150, 200, 20),
-    new Platform(600, canvas.height - 250, 200, 20),
-    new Platform(1000, canvas.height - 200, 200, 20),
-    new Platform(1400, canvas.height - 300, 200, 20),
+    new Platform(300, canvas.height - 150, 200, 50),
+    new Platform(600, canvas.height - 250, 200, 50),
+    new Platform(1000, canvas.height - 200, 200, 50),
+    new Platform(1400, canvas.height - 300, 200, 50),
 ];
 
 let cameraOffsetX = 0;
@@ -71,7 +85,15 @@ window.addEventListener('keydown', (e) => keys[e.key] = true);
 window.addEventListener('keyup', (e) => keys[e.key] = false);
 
 function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Draw background
+    if (backgroundImg.complete) {
+        const pattern = ctx.createPattern(backgroundImg, 'repeat');
+        ctx.fillStyle = pattern;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else {
+        ctx.fillStyle = '#87CEEB';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     // Player movement
     if (keys['ArrowLeft']) player.velX = -player.speed;
@@ -83,7 +105,6 @@ function gameLoop() {
         player.grounded = false;
     }
 
-    // Update player
     player.update();
 
     // Platform collision
